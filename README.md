@@ -3,6 +3,8 @@
 An MCP (Model Context Protocol) server that lets [Claude Code](https://claude.ai/claude-code) operate Redmine directly.
 Runs as an HTTP server on RHEL or Docker. Credentials are never stored on the server — they are passed per-request via HTTP headers from the Claude Code configuration file.
 
+[![redmine-mcp-stateless MCP server](https://glama.ai/mcp/servers/daiji-sshr/redmine-mcp-stateless/badges/card.svg)](https://glama.ai/mcp/servers/daiji-sshr/redmine-mcp-stateless)
+
 ---
 
 ## Key Features
