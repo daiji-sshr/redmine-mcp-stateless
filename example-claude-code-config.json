@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "redmine-mcp-stateless": {
+      "type": "sse",
+      "url": "http://<your-server-ip>:8000/sse",
+      "headers": {
+        "X-Redmine-URL": "https://<your-redmine-url>",
+        "X-Redmine-API-Key": "<your-api-key>"
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+
+# Logs
+*.log
+/var/log/redmine-mcp-stateless/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+SESSION_NOTE.md

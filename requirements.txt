@@ -1,0 +1,4 @@
+mcp[cli]>=1.25.0,<2
+python-redmine>=2.5.0
+uvicorn[standard]>=0.24.0
+starlette>=0.40.0

@@ -1,0 +1,36 @@
+[Unit]
+Description=Redmine MCP Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=redmine-mcp-stateless
+Group=redmine-mcp-stateless
+WorkingDirectory=/opt/redmine-mcp-stateless
+
+Environment=REDMINE_MCP_PORT=8000
+
+ExecStart=/opt/redmine-mcp-stateless/venv/bin/python /opt/redmine-mcp-stateless/redmine_mcp_interface.py
+ExecReload=/bin/kill -HUP $MAINPID
+
+Restart=on-failure
+RestartSec=10
+StartLimitInterval=60
+StartLimitBurst=3
+
+# Logging
+StandardOutput=append:/var/log/redmine-mcp-stateless/stdout.log
+StandardError=append:/var/log/redmine-mcp-stateless/stderr.log
+SyslogIdentifier=redmine-mcp-stateless
+
+# File descriptor limit
+LimitNOFILE=65536
+
+# Process stop timeout
+TimeoutStartSec=30
+TimeoutStopSec=30
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target
