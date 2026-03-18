@@ -11,21 +11,24 @@ from mcp.server.fastmcp import FastMCP
 from redmine_mcp_server import RedmineClient, RedmineError
 
 LOG_DIR = "/var/log/redmine-mcp-stateless"
-os.makedirs(LOG_DIR, exist_ok=True)
 
 logger = logging.getLogger("redmine-mcp-stateless")
 logger.setLevel(logging.INFO)
 
 _fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
-_fh = logging.handlers.RotatingFileHandler(
-    os.path.join(LOG_DIR, "server.log"),
-    maxBytes=10 * 1024 * 1024,
-    backupCount=5,
-    encoding="utf-8",
-)
-_fh.setFormatter(_fmt)
-logger.addHandler(_fh)
+try:
+    os.makedirs(LOG_DIR, exist_ok=True)
+    _fh = logging.handlers.RotatingFileHandler(
+        os.path.join(LOG_DIR, "server.log"),
+        maxBytes=10 * 1024 * 1024,
+        backupCount=5,
+        encoding="utf-8",
+    )
+    _fh.setFormatter(_fmt)
+    logger.addHandler(_fh)
+except OSError:
+    pass  # Skip file logging if directory is not writable (e.g. Glama inspection)
 
 _sh = logging.StreamHandler()
 _sh.setFormatter(_fmt)
@@ -68,13 +71,21 @@ class _CredentialsMiddleware:
 
 
 def _client() -> RedmineClient:
-    """Read credentials from ContextVar and return a client instance."""
-    url = _redmine_url.get()
-    key = _redmine_key.get()
-    if not url or not key:
-        raise ValueError(
-            "X-Redmine-URL and X-Redmine-API-Key headers are required"
-        )
+    """Return a RedmineClient using credentials from ContextVar (SSE) or env vars (stdio)."""
+    if os.environ.get("MCP_TRANSPORT") == "stdio":
+        url = os.environ.get("REDMINE_URL", "")
+        key = os.environ.get("REDMINE_API_KEY", "")
+        if not url or not key:
+            raise ValueError(
+                "REDMINE_URL and REDMINE_API_KEY environment variables are required"
+            )
+    else:
+        url = _redmine_url.get()
+        key = _redmine_key.get()
+        if not url or not key:
+            raise ValueError(
+                "X-Redmine-URL and X-Redmine-API-Key headers are required"
+            )
     return RedmineClient(url, key)
 
 
@@ -351,15 +362,21 @@ def list_users() -> List[Dict[str, Any]]:
 
 
 if __name__ == "__main__":
-    _port = int(os.environ.get("REDMINE_MCP_PORT", "8000"))
-    logger.info(f"Starting Redmine MCP Server on 0.0.0.0:{_port}")
+    _transport = os.environ.get("MCP_TRANSPORT", "sse")
 
-    inner_app = mcp.sse_app()
-    app = _CredentialsMiddleware(inner_app)
+    if _transport == "stdio":
+        logger.info("Starting Redmine MCP Server (stdio transport)")
+        mcp.run()
+    else:
+        _port = int(os.environ.get("REDMINE_MCP_PORT", "8000"))
+        logger.info(f"Starting Redmine MCP Server on 0.0.0.0:{_port}")
 
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=_port,
-        log_level="info",
-    )
+        inner_app = mcp.sse_app()
+        app = _CredentialsMiddleware(inner_app)
+
+        uvicorn.run(
+            app,
+            host="0.0.0.0",
+            port=_port,
+            log_level="info",
+        )
