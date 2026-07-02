@@ -29,6 +29,21 @@ Runs as an HTTP server on RHEL or Docker. Credentials are never stored on the se
 
 ---
 
+## Redmine Initial Setup
+
+Before using RedmineMCP, enable the Redmine REST API (disabled by default).
+
+1. Log in as an administrator
+2. **Administration → Settings → API** tab → check **Enable REST web service** and save
+
+To get an API key:
+
+1. Open **My account** from the top-right menu
+2. Click **Show** next to **API access key**
+3. Use this key as `X-Redmine-API-Key` in the Claude Code configuration
+
+---
+
 ## Architecture
 
 ```
@@ -140,6 +155,17 @@ Add the following to `~/.claude.json`:
   }
 }
 ```
+
+**stdio transport (for registry inspection / local use)**
+
+The server normally runs with SSE (HTTP). Setting the environment variable `MCP_TRANSPORT=stdio` switches it to stdio transport. In this mode, credentials are passed via environment variables instead of HTTP headers:
+
+```bash
+MCP_TRANSPORT=stdio REDMINE_URL=https://<your-redmine> REDMINE_API_KEY=<your-api-key> \
+    python redmine_mcp_interface.py
+```
+
+This mode exists mainly for MCP registry inspection (e.g. Glama). Use SSE for shared team deployment.
 
 ---
 

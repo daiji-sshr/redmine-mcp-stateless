@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 
 import uvicorn
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 
 from redmine_mcp_server import RedmineClient, RedmineError
 
@@ -89,7 +90,17 @@ def _client() -> RedmineClient:
     return RedmineClient(url, key)
 
 
-mcp = FastMCP("redmine-mcp-stateless-server")
+# The SDK's DNS rebinding protection returns 421 when the Host header
+# changes through a proxy/gateway, so disable it here.
+# Access control is expected to be enforced at the infrastructure level
+# (e.g. reverse proxy).
+# see: https://github.com/modelcontextprotocol/python-sdk/issues/1798
+mcp = FastMCP(
+    "redmine-mcp-stateless-server",
+    transport_security=TransportSecuritySettings(
+        enable_dns_rebinding_protection=False,
+    ),
+)
 
 
 @mcp.tool()
